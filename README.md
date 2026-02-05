@@ -269,21 +269,6 @@ expand_search_radius = 2%    # Expands search per occlusion frame
 
 ---
 
-## 🧪 Testing with Demo Videos
-
-Test videos are located in `frontend/public/videos/`:
-- `cerveza1.mp4` - Left tap pour
-- `cerveza2.mp4` - 2 beers left tap ✓
-- `cerveza3.mp4` - 2 beers right tap ✓
-- `cerveza4-7.mp4` - Different scenarios
-
-**To validate:**
-1. Access frontend
-2. Select demo video from local list
-3. Process and verify count
-
----
-
 ## 🐛 Troubleshooting
 
 ### Backend won't start
