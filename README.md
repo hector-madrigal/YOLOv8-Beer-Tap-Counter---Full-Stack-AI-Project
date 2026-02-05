@@ -353,7 +353,7 @@ docker-compose logs backend --tail=50
 
 ## 👨‍💻 Development
 
-**Author**: gamb00za  
+**Author**: Héctor Madrigal 
 **Project**: Practical Case - Intern Full Stack & AI Developer  
 **Tech Stack**: Python, FastAPI, YOLOv8, SQLite, Docker, TailwindCSS  
 **License**: Educational/demonstrative use
