@@ -1,0 +1,12 @@
+# Backend dependencies (full version with YOLO processing)
+fastapi==0.109.0
+uvicorn[standard]==0.27.0
+python-multipart==0.0.6
+sqlalchemy==2.0.25
+pydantic==2.5.3
+numpy==1.24.3
+opencv-python-headless==4.8.1.78
+Pillow==10.1.0
+
+# YOLO processing (torch/torchvision installed separately in Dockerfile)
+ultralytics==8.0.196

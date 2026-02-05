@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contador de Cervezas</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        .beer-gradient {
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+        }
+        .spinner {
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #f59e0b;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        .drop-zone {
+            border: 2px dashed #d1d5db;
+            transition: all 0.3s ease;
+        }
+        .drop-zone.drag-over {
+            border-color: #f59e0b;
+            background-color: #fef3c7;
+        }
+        .tap-card {
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .tap-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 min-h-screen">
+    <!-- Header -->
+    <header class="beer-gradient text-white shadow-lg">
+        <div class="container mx-auto px-4 py-6">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <!-- Logo -->
+                    <img src="public/logo_gamb00za.png" alt="Gamb00za Logo" class="w-12 h-12 rounded-lg shadow-md">
+                    <div>
+                        <h1 class="text-2xl font-bold">Contador de Cervezas</h1>
+                        <p class="text-amber-100 text-sm">Sistema de conteo por grifo</p>
+                    </div>
+                </div>
+                <div id="api-status" class="flex items-center space-x-2">
+                    <span class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></span>
+                    <span class="text-sm">API Conectada</span>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <main class="container mx-auto px-4 py-8">
+        <!-- Upload Section -->
+        <section class="bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">📤 Subir Vídeo</h2>
+            
+            <div id="drop-zone" class="drop-zone rounded-lg p-8 text-center cursor-pointer">
+                <svg class="w-12 h-12 mx-auto text-gray-400 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"/>
+                </svg>
+                <p class="text-gray-600 mb-2">Arrastra y suelta un vídeo aquí</p>
+                <p class="text-gray-400 text-sm mb-4">o haz clic para seleccionar</p>
+                <input type="file" id="file-input" accept=".mp4,.mov,.avi,.mkv" class="hidden">
+                <button id="select-btn" class="bg-amber-500 hover:bg-amber-600 text-white px-6 py-2 rounded-lg font-medium transition-colors">
+                    Seleccionar Archivo
+                </button>
+            </div>
+
+            <!-- Selected File Info -->
+            <div id="file-info" class="hidden mt-4 p-4 bg-gray-50 rounded-lg">
+                <div class="flex items-center justify-between">
+                    <div class="flex items-center space-x-3">
+                        <svg class="w-8 h-8 text-amber-500" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M18 4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4h-4z"/>
+                        </svg>
+                        <div>
+                            <p id="file-name" class="font-medium text-gray-800"></p>
+                            <p id="file-size" class="text-sm text-gray-500"></p>
+                        </div>
+                    </div>
+                    <button id="clear-file" class="text-gray-400 hover:text-gray-600">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Upload & Process Button -->
+            <div id="action-buttons" class="hidden mt-4 flex space-x-4">
+                <button id="upload-btn" class="flex-1 beer-gradient hover:opacity-90 text-white px-6 py-3 rounded-lg font-semibold transition-opacity flex items-center justify-center space-x-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+                    </svg>
+                    <span>Subir y Procesar</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Processing Status -->
+        <section id="processing-section" class="hidden bg-white rounded-xl shadow-md p-6 mb-8">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">⚙️ Estado del Procesamiento</h2>
+            
+            <div id="status-container" class="flex items-center space-x-4 p-4 rounded-lg bg-blue-50">
+                <div id="status-spinner" class="spinner"></div>
+                <div>
+                    <p id="status-text" class="font-medium text-blue-800">Procesando vídeo...</p>
+                    <p id="status-detail" class="text-sm text-blue-600">Analizando fotogramas para detectar tiradas</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Results Section -->
+        <section id="results-section" class="hidden">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">📊 Resultados del Conteo</h2>
+            
+            <!-- Video Timestamp -->
+            <div class="bg-indigo-50 border-l-4 border-indigo-500 p-4 mb-6 rounded-lg">
+                <div class="flex items-center">
+                    <svg class="w-5 h-5 text-indigo-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                    <span class="text-sm text-gray-600 font-medium">Fecha del video:</span>
+                    <span id="videoTimestamp" class="ml-2 text-sm font-semibold text-indigo-700">No disponible</span>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Tap A Card -->
+                <div class="tap-card bg-white rounded-xl shadow-md p-6 border-t-4 border-blue-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">Grifo A</h3>
+                        <span class="bg-blue-100 text-blue-800 px-3 py-1 rounded-full text-sm font-medium">Izquierdo</span>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <span id="tap-a-count" class="text-5xl font-bold text-blue-600">0</span>
+                        <span class="text-gray-500 mb-2">cervezas</span>
+                    </div>
+                </div>
+
+                <!-- Tap B Card -->
+                <div class="tap-card bg-white rounded-xl shadow-md p-6 border-t-4 border-green-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">Grifo B</h3>
+                        <span class="bg-green-100 text-green-800 px-3 py-1 rounded-full text-sm font-medium">Derecho</span>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <span id="tap-b-count" class="text-5xl font-bold text-green-600">0</span>
+                        <span class="text-gray-500 mb-2">cervezas</span>
+                    </div>
+                </div>
+
+                <!-- Total Card -->
+                <div class="tap-card bg-white rounded-xl shadow-md p-6 border-t-4 border-amber-500">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-lg font-semibold text-gray-700">Total</h3>
+                        <span class="bg-amber-100 text-amber-800 px-3 py-1 rounded-full text-sm font-medium">Ambos</span>
+                    </div>
+                    <div class="flex items-end space-x-2">
+                        <span id="total-count" class="text-5xl font-bold text-amber-600">0</span>
+                        <span class="text-gray-500 mb-2">cervezas</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Timeline (Optional) -->
+            <div id="timeline-section" class="bg-white rounded-xl shadow-md p-6">
+                <h3 class="text-lg font-semibold text-gray-800 mb-4">🕐 Timeline de Eventos</h3>
+                <div id="timeline-container" class="space-y-3 max-h-64 overflow-y-auto">
+                    <!-- Events will be added here dynamically -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Video History -->
+        <section class="mt-8 bg-white rounded-xl shadow-md p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h2 class="text-xl font-semibold text-gray-800">📁 Historial de Vídeos</h2>
+                <button id="refresh-history" class="text-amber-600 hover:text-amber-700 flex items-center space-x-1">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/>
+                    </svg>
+                    <span>Actualizar</span>
+                </button>
+            </div>
+            
+            <div id="history-container" class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Archivo</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Estado</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Grifo A</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Grifo B</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Total</th>
+                            <th class="px-4 py-3 text-left font-semibold text-gray-600">Fecha</th>
+                            <th class="px-4 py-3 text-center font-semibold text-gray-600">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="history-body" class="divide-y divide-gray-100">
+                        <!-- History rows will be added here -->
+                    </tbody>
+                </table>
+                <p id="no-history" class="hidden text-center text-gray-500 py-8">No hay vídeos procesados aún</p>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-gray-800 text-gray-400 py-6 mt-12">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-lg font-medium text-white mb-2">Beer Counter System - Caso Práctico Full Stack & AI Developer</p>
+            <p class="text-amber-400 font-bold">gamb00za</p>
+        </div>
+    </footer>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 transform translate-y-full opacity-0 transition-all duration-300">
+        <div class="bg-gray-800 text-white px-6 py-3 rounded-lg shadow-lg flex items-center space-x-3">
+            <span id="toast-icon"></span>
+            <span id="toast-message"></span>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,37 @@
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# Install system dependencies for OpenCV and create data directory
+RUN apt-get update && apt-get install -y \
+    libglib2.0-0 \
+    libsm6 \
+    libxext6 \
+    libxrender-dev \
+    libgomp1 \
+    libgl1 \
+    curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && mkdir -p /app/data
+
+# Copy requirements first for better caching
+COPY requirements.txt .
+
+# Install PyTorch CPU FIRST (before requirements.txt to avoid CUDA deps)
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 \
+    torch==2.1.2+cpu torchvision==0.16.2+cpu --index-url https://download.pytorch.org/whl/cpu
+
+# Install remaining requirements (torch is already installed, pip will skip it)
+RUN pip install --no-cache-dir --default-timeout=1000 --retries 10 -r requirements.txt
+
+# Copy application code
+COPY app/ ./app/
+
+# Create uploads directory
+RUN mkdir -p uploads
+
+# Expose port
+EXPOSE 8000
+
+# Run the application
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
